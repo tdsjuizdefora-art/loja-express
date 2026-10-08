@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛍️ LojaExpress Pro - Cliente & Back-Office ERP</title>
+
+    <!-- ============================================================
+       TAGS ESSENCIAIS DO PWA
+       ============================================================ -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3081/3081840.png">
+
+    <style>
+        /* ============================================================
+           DESIGN SYSTEM & VARIÁVEIS
+           ============================================================ */
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --admin-theme: #0f172a;
+            --secondary: #ec4899;
+            --accent: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text-main); min-height: 100vh; padding-bottom: 80px; }
+
+        /* Header */
+        .app-header { position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border); z-index: 50; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .header-content { max-width: 1200px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .brand-logo { font-size: 1.25rem; font-weight: 900; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+        /* Trocador de Papel */
+        .role-switcher-box { display: flex; align-items: center; gap: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 30px; border: 1px solid var(--border); }
+        .role-btn { background: none; border: none; padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .role-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3); }
+        .role-btn.active.admin { background: var(--admin-theme); color: #fde047; }
+
+        .btn-auth-header { background: #eff6ff; border: 1px solid #bfdbfe; color: var(--primary-dark); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-cart { position: relative; background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .cart-badge { background: var(--secondary); color: white; font-size: 0.72rem; padding: 2px 6px; border-radius: 10px; font-weight: 800; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+        .view-section { display: none; animation: fadeIn 0.25s ease-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Catálogo e Banners */
+        .promo-banner { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%); color: white; padding: 20px; border-radius: var(--radius-lg); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2); flex-wrap: wrap; gap: 12px; }
+        .filters-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+        .search-input { flex: 1; min-width: 220px; padding: 10px 14px; border-radius: 30px; border: 1px solid var(--border); font-size: 0.9rem; outline: none; background: var(--surface); }
+        .category-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+        .chip { padding: 6px 14px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); font-size: 0.82rem; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .product-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; transition: 0.25s; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+        .product-img { height: 140px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 3.8rem; cursor: pointer; }
+        .product-body { padding: 14px; display: flex; flex-direction: column; flex: 1; }
+        .product-category { font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+        .product-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; cursor: pointer; }
+        .product-rating { font-size: 0.78rem; color: var(--warning); margin-bottom: 10px; cursor: pointer; }
+        .current-price { font-size: 1.25rem; font-weight: 900; color: var(--primary-dark); margin-top: auto; margin-bottom: 10px; }
+        .btn-view-details { background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; padding: 8px; border-radius: var(--radius-md); font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: 0.2s; width: 100%; }
+        .btn-view-details:hover { background: var(--primary); color: white; }
+
+        /* Tela de Detalhe */
+        .product-detail-layout { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 24px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .detail-img-box { background: #f1f5f9; border-radius: var(--radius-md); height: 260px; display: flex; align-items: center; justify-content: center; font-size: 6rem; }
+        .detail-price { font-size: 1.8rem; font-weight: 900; color: var(--primary-dark); margin: 10px 0; }
+        .quantity-picker { display: flex; align-items: center; gap: 12px; margin: 16px 0; background: #f8fafc; padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); width: fit-content; }
+        .btn-qty-large { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: white; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        .btn-add-cart-large { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); font-size: 0.95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-add-cart-large:hover { background: var(--primary-dark); }
+
+        /* Back-Office Administrador */
+        .admin-panel { background: var(--surface); border-radius: var(--radius-lg); border: 2px solid #334155; padding: 24px; box-shadow: var(--shadow); }
+        .admin-nav { display: flex; gap: 8px; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; overflow-x: auto; }
+        .admin-tab-btn { background: #f1f5f9; border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+        .admin-tab-btn.active { background: var(--admin-theme); color: #fde047; border-color: var(--admin-theme); }
+        .admin-subview { display: none; }
+        .admin-subview.active { display: block; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .kpi-card { background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; border-left: 4px solid var(--primary); }
+        .kpi-card .val { font-size: 1.5rem; font-weight: 900; color: var(--text-main); margin-top: 4px; }
+        .kpi-card .lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+        .admin-table th { background: #0f172a; color: white; padding: 10px 12px; text-align: left; }
+        .admin-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        .admin-table tr:hover td { background: #f8fafc; }
+        .select-status { padding: 5px 8px; border-radius: 6px; font-weight: bold; font-size: 0.78rem; cursor: pointer; border: 1px solid var(--border); }
+
+        .admin-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 16px; }
+        .admin-form-group { display: flex; flex-direction: column; text-align: left; }
+        .admin-form-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+        .admin-input { padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.85rem; }
+
+        .btn-crud { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+        .btn-crud.delete { background: var(--danger); }
+        .btn-crud.edit { background: var(--warning); color: #0f172a; }
+
+        /* Modais e Drawer */
+        .modal, .drawer-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 100; display: none; backdrop-filter: blur(2px); }
+        .modal.active { display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .drawer-overlay.active { display: block; }
+        .modal-content { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: var(--shadow); position: relative; }
+
+        .cart-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 420px; background: var(--surface); z-index: 101; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; }
+        .drawer-overlay.active .cart-drawer { transform: translateX(0); }
+        .drawer-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 16px; }
+        .btn-close { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+
+        .auth-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+        .auth-tab-btn { flex: 1; padding: 10px; background: none; border: none; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
+        .auth-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .btn-submit { background: var(--primary); color: white; border: none; width: 100%; padding: 12px; border-radius: var(--radius-md); font-weight: 800; cursor: pointer; margin-top: 8px; }
+        .btn-submit:hover { background: var(--primary-dark); }
+
+        .summary-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+        .summary-row.total { font-size: 1.15rem; font-weight: 900; color: var(--text-main); border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 8px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 40; }
+        .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+        .nav-tab.active { color: var(--primary); }
+
+        .toast { position: fixed; top: 20px; right: 20px; background: #0f172a; color: white; padding: 12px 20px; border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; z-index: 200; display: none; }
+        @media (max-width: 768px) { .product-detail-layout { grid-template-columns: 1fr; } .admin-table { font-size: 0.72rem; } }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+    HEADER & TROCADOR DE PAPEL (CLIENTE VS ADMIN)
+    ============================================================ -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="brand-logo" onclick="trocarAba('loja')">
+                🛍️ LojaExpress Pro
+            </div>
+
+            <!-- Alternador de Papéis para Demonstração em Aula -->
+            <div class="role-switcher-box">
+                <button class="role-btn active" id="btn-role-cliente" onclick="alternarVisao('cliente')">
+                    👤 Cliente
+                </button>
+                <button class="role-btn" id="btn-role-admin" onclick="alternarVisao('admin')">
+                    ⚙️ Back-Office (Admin)
+                </button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+                <button class="btn-auth-header" id="btn-header-auth" onclick="abrirModalAuthCliente()">
+                    👤 <span id="lbl-cliente-logado">Entrar</span>
+                </button>
+                <button class="btn-cart" id="btn-carrinho-header" onclick="abrirCarrinho()">
+                    🛒 <span class="cart-badge" id="badge-cart-count">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="app-toast" class="toast"></div>
+
+    <main class="container">
+
+        <!-- VISÃO CLIENTE: CATÁLOGO DE PRODUTOS -->
+        <section id="view-loja" class="view-section active">
+            <div class="promo-banner">
+                <div>
+                    <h2>🔥 Cupons Oficiais Vigentes:</h2>
+                    <p>Aplicados automaticamente ou copie para o carrinho:</p>
+                </div>
+                <div id="banner-cupom-pills" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+            </div>
+
+            <div class="filters-bar">
+                <input type="text" class="search-input" id="input-busca" placeholder="🔍 Buscar lanches, pizzas, bebidas..." oninput="filtrarProdutos()">
+                <div class="category-chips">
+                    <button class="chip active" onclick="filtrarCategoria('todos', this)">Todos</button>
+                    <button class="chip" onclick="filtrarCategoria('Lanches', this)">🍔 Lanches</button>
+                    <button class="chip" onclick="filtrarCategoria('Pizzas', this)">🍕 Pizzas</button>
+                    <button class="chip" onclick="filtrarCategoria('Bebidas', this)">🥤 Bebidas</button>
+                    <button class="chip" onclick="filtrarCategoria('Eletrônicos', this)">📱 Eletrônicos</button>
+                </div>
+            </div>
+
+            <div class="products-grid" id="grid-produtos"></div>
+        </section>
+
+        <!-- VISÃO CLIENTE: TELA DE DETALHE DO PRODUTO -->
+        <section id="view-produto-detalhe" class="view-section">
+            <button style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer; margin-bottom:14px;" onclick="trocarAba('loja')">
+                &larr; Voltar ao Catálogo
+            </button>
+
+            <div class="product-detail-layout">
+                <div class="detail-img-box" id="detalhe-img">🍔</div>
+
+                <div style="display:flex; flex-direction:column;">
+                    <span id="detalhe-categoria" style="font-size:0.75rem; font-weight:bold; color:var(--text-muted); text-transform:uppercase;"></span>
+                    <h2 id="detalhe-nome" style="font-size:1.4rem; margin:4px 0;"></h2>
+                    <div id="detalhe-rating" style="color:var(--warning); font-size:0.85rem; margin-bottom:8px;"></div>
+                    <p id="detalhe-descricao" style="color:var(--text-muted); line-height:1.6; font-size:0.9rem;"></p>
+                    <div style="font-size:0.8rem; color:#10b981; font-weight:bold; margin-top:4px;" id="detalhe-estoque-txt"></div>
+
+                    <div class="detail-price" id="detalhe-preco">R$ 0,00</div>
+
+                    <div class="quantity-picker">
+                        <span style="font-size:0.85rem; font-weight:bold;">Quantidade:</span>
+                        <button class="btn-qty-large" onclick="ajustarQtdDetalhe(-1)">-</button>
+                        <span id="detalhe-qtd-valor" style="font-size:1.2rem; font-weight:bold; min-width:30px; text-align:center;">1</span>
+                        <button class="btn-qty-large" onclick="ajustarQtdDetalhe(1)">+</button>
+                    </div>
+
+                    <button class="btn-add-cart-large" onclick="adicionarDetalheAoCarrinho()">
+                        🛒 Adicionar ao Pedido &bull; <span id="detalhe-btn-subtotal">R$ 0,00</span>
+                    </button>
+                </div>
+            </div>
+
+            <div style="background:white; padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
+                <h3>⭐ Opiniões de Quem Já Comprou</h3>
+                <div id="detalhe-lista-avaliacoes" style="margin:14px 0; display:flex; flex-direction:column; gap:10px;"></div>
+                <div id="box-formulario-avaliacao" style="background:#f8fafc; padding:16px; border-radius:var(--radius-md); border:1px solid var(--border);"></div>
+            </div>
+        </section>
+
+        <!-- VISÃO CLIENTE: MEUS PEDIDOS -->
+        <section id="view-pedidos-cliente" class="view-section">
+            <h2 style="font-size: 1.3rem; margin-bottom: 16px;">📦 Meus Pedidos &amp; Rastreamento</h2>
+            <div id="lista-pedidos-cliente"></div>
+        </section>
+
+        <!-- VISÃO CLIENTE: MEU PERFIL -->
+        <section id="view-perfil-cliente" class="view-section">
+            <div style="background:white; padding:24px; border-radius:var(--radius-lg); border:1px solid var(--border); max-width:550px; margin:0 auto; text-align:left;">
+                <h2 style="margin-bottom:12px; color:var(--primary);">👤 Meu Perfil</h2>
+                <div id="dados-cliente-perfil"></div>
+                <button class="btn-submit" style="background:var(--danger); margin-top:16px;" onclick="logoutCliente()">🚪 Sair da Conta (Logout)</button>
+            </div>
+        </section>
+
+        <!-- VISÃO ADMINISTRADOR: BACK-OFFICE ERP -->
+        <section id="view-admin" class="view-section">
+            <div class="admin-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h2 style="color:var(--admin-theme); margin:0;">🛠️ Painel Administrativo ERP</h2>
+                        <small style="color:var(--text-muted);">Gestão Completa de Vendas, Produtos, Clientes e Backup</small>
+                    </div>
+                    <button class="role-btn" style="background:#dc2626; color:white;" onclick="logoutAdmin()">🚪 Encerrar Sessão Admin</button>
+                </div>
+
+                <div class="admin-nav">
+                    <button class="admin-tab-btn active" onclick="trocarSubAbaAdmin('adm-dash', this)">📊 Dashboard Vendas</button>
+                    <button class="admin-tab-btn" onclick="trocarSubAbaAdmin('adm-pedidos', this)">📋 Gestão de Pedidos (CRUD)</button>
+                    <button class="admin-tab-btn" onclick="trocarSubAbaAdmin('adm-produtos', this)">📦 Gestão de Produtos (CRUD)</button>
+                    <button class="admin-tab-btn" onclick="trocarSubAbaAdmin('adm-clientes', this)">👥 Base de Clientes (CRUD)</button>
+                    <button class="admin-tab-btn" onclick="trocarSubAbaAdmin('adm-cupons', this)">🎟️ Cupons Promocionais</button>
+                    <button class="admin-tab-btn" onclick="trocarSubAbaAdmin('adm-backup', this)">💾 Backup &amp; Senha</button>
+                </div>
+
+                <!-- 1. DASHBOARD -->
+                <div id="adm-dash" class="admin-subview active">
+                    <div class="kpi-grid">
+                        <div class="kpi-card"><div class="lbl">Faturamento Total</div><div class="val" id="kpi-faturamento">R$ 0,00</div></div>
+                        <div class="kpi-card"><div class="lbl">Total de Pedidos</div><div class="val" id="kpi-total-pedidos">0</div></div>
+                        <div class="kpi-card"><div class="lbl">Ticket Médio</div><div class="val" id="kpi-ticket-medio">R$ 0,00</div></div>
+                        <div class="kpi-card"><div class="lbl">Clientes Cadastrados</div><div class="val" id="kpi-total-clientes">0</div></div>
+                    </div>
+                    <h3>📈 Resumo de Pedidos por Status:</h3>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;" id="kpi-status-chips"></div>
+                </div>
+
+                <!-- 2. PEDIDOS -->
+                <div id="adm-pedidos" class="admin-subview">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+                        <h3>📋 Pedidos Cadastrados (Dar Baixa / Editar)</h3>
+                        <button class="btn-crud" onclick="abrirModalPedidoManual()">➕ Inserir Pedido Manual (Balcão)</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>ID</th><th>Cliente</th><th>Data</th><th>Total</th><th>Status</th><th>Dar Baixa / Ação</th><th>Excluir</th></tr>
+                            </thead>
+                            <tbody id="tbody-adm-pedidos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. PRODUTOS -->
+                <div id="adm-produtos" class="admin-subview">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+                        <h3>📦 Catálogo de Produtos</h3>
+                        <button class="btn-crud" onclick="abrirModalProduto()">➕ Cadastrar Novo Produto</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>ID</th><th>Foto</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody id="tbody-adm-produtos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. CLIENTES -->
+                <div id="adm-clientes" class="admin-subview">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap;">
+                        <h3>👥 Base de Clientes Cadastrados</h3>
+                        <button class="btn-crud" onclick="abrirModalClienteManual()">➕ Cadastrar Novo Cliente</button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>ID</th><th>Nome</th><th>E-mail</th><th>CPF</th><th>Cidade/UF</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody id="tbody-adm-clientes"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. CUPONS -->
+                <div id="adm-cupons" class="admin-subview">
+                    <h3>🎟️ Criar Novo Cupom Promocional</h3>
+                    <div class="admin-form-grid">
+                        <div class="admin-form-group"><label>Código:</label><input type="text" id="cupom-cod" class="admin-input" placeholder="Ex: PROMO30" style="text-transform:uppercase;"></div>
+                        <div class="admin-form-group"><label>Tipo:</label><select id="cupom-tipo" class="admin-input"><option value="pct">% Percentual</option><option value="reais">R$ Fixo</option></select></div>
+                        <div class="admin-form-group"><label>Valor:</label><input type="number" id="cupom-val" class="admin-input" placeholder="Ex: 20"></div>
+                        <div class="admin-form-group"><label>Pedido Mínimo (R$):</label><input type="number" id="cupom-min" class="admin-input" value="0"></div>
+                        <div class="admin-form-group"><label>Expira em:</label><input type="date" id="cupom-exp" class="admin-input" value="2026-12-31"></div>
+                    </div>
+                    <button class="btn-crud" style="padding:10px 20px;" onclick="salvarNovoCupomAdmin()">➕ Salvar Cupom</button>
+                    <h4 style="margin-top:20px;">Cupons Ativos no Banco:</h4>
+                    <table class="admin-table">
+                        <thead><tr><th>Código</th><th>Regra</th><th>Mínimo</th><th>Validade</th><th>Status</th><th>Ações</th></tr></thead>
+                        <tbody id="tbody-adm-cupons"></tbody>
+                    </table>
+                </div>
+
+                <!-- 6. BACKUP -->
+                <div id="adm-backup" class="admin-subview">
+                    <h3>⚙️ Alterar Senha do Administrador</h3>
+                    <div class="admin-form-grid" style="max-width:500px;">
+                        <div class="admin-form-group"><label>E-mail Admin:</label><input type="email" id="adm-cfg-email" class="admin-input" value="admin@loja.com"></div>
+                        <div class="admin-form-group"><label>Nova Senha:</label><input type="password" id="adm-cfg-senha" class="admin-input" placeholder="Nova senha"></div>
+                    </div>
+                    <button class="btn-crud" onclick="salvarCredenciaisAdmin()">💾 Atualizar Senha Admin</button>
+                    <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
+                    <h3>💾 Backup e Restauração Relacional (LocalStorage)</h3>
+                    <div style="display:flex; gap:10px; margin:14px 0; flex-wrap:wrap;">
+                        <button class="btn-crud" style="background:var(--primary);" onclick="exportarBackupJSON()">📥 Baixar Arquivo JSON</button>
+                        <label class="btn-crud" style="cursor:pointer;">
+                            📤 Restaurar Banco JSON
+                            <input type="file" id="input-restore-json" accept=".json" style="display:none;" onchange="importarBackupJSON(event)">
+                        </label>
+                        <button class="btn-crud delete" onclick="resetarBancoFabrica()">⚠️ Restaurar Dados Iniciais</button>
+                    </div>
+                    <div style="background:#090d16; color:#38bdf8; font-family:monospace; padding:12px; border-radius:8px; font-size:0.75rem; max-height:160px; overflow-y:auto;" id="json-viewer">Clique em Baixar para gerar o payload JSON.</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAIS E DRAWERS -->
+    <div class="modal" id="modal-auth-cliente">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 id="auth-title">Acesso do Cliente</h3>
+                <button class="btn-close" onclick="fecharModal('modal-auth-cliente')">✕</button>
+            </div>
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tab-cli-login" onclick="alternarAbaCliente('login')">Já sou Cliente</button>
+                <button class="auth-tab-btn" id="tab-cli-cad" onclick="alternarAbaCliente('cad')">Criar Conta</button>
+            </div>
+            <form id="form-cli-login" onsubmit="loginCliente(event)">
+                <label style="font-size:0.78rem; font-weight:bold;">E-mail:</label>
+                <input type="email" id="cli-log-email" required class="admin-input" style="width:100%; margin-bottom:10px;" value="ana@email.com">
+                <label style="font-size:0.78rem; font-weight:bold;">Senha:</label>
+                <input type="password" id="cli-log-senha" required class="admin-input" style="width:100%; margin-bottom:12px;" value="123">
+                <button type="submit" class="btn-submit">Entrar na Minha Conta</button>
+            </form>
+            <form id="form-cli-cad" style="display:none;" onsubmit="cadastroCliente(event)">
+                <input type="text" id="cad-nome" required placeholder="Nome Completo" class="admin-input" style="width:100%; margin-bottom:8px;">
+                <input type="email" id="cad-email" required placeholder="E-mail" class="admin-input" style="width:100%; margin-bottom:8px;">
+                <input type="password" id="cad-senha" required placeholder="Senha" class="admin-input" style="width:100%; margin-bottom:8px;">
+                <input type="text" id="cad-cpf" required placeholder="CPF" class="admin-input" style="width:100%; margin-bottom:8px;">
+                <input type="text" id="cad-tel" required placeholder="WhatsApp" class="admin-input" style="width:100%; margin-bottom:8px;">
+                <input type="text" id="cad-end" required placeholder="Endereço de Entrega" class="admin-input" style="width:100%; margin-bottom:8px;">
+                <input type="text" id="cad-cid" required placeholder="Cidade - UF" class="admin-input" style="width:100%; margin-bottom:12px;" value="São Paulo - SP">
+                <button type="submit" class="btn-submit" style="background:var(--accent);">Salvar e Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-login-admin">
+        <div class="modal-content" style="max-width:400px; text-align:center;">
+            <div style="font-size:2.5rem; margin-bottom:8px;">🔐</div>
+            <h3>Acesso Restrito ao Back-Office</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:14px;">Identifique-se com as credenciais de Administrador</p>
+            <form onsubmit="autenticarAdmin(event)">
+                <input type="email" id="adm-login-email" required placeholder="admin@loja.com" class="admin-input" style="width:100%; margin-bottom:8px;" value="admin@loja.com">
+                <input type="password" id="adm-login-senha" required placeholder="Senha" class="admin-input" style="width:100%; margin-bottom:14px;" value="admin123">
+                <button type="submit" class="btn-submit" style="background:var(--admin-theme); color:#fde047;">Acessar Painel ERP &rarr;</button>
+            </form>
+            <small style="color:var(--text-muted); margin-top:10px; display:block;">Padrão: admin@loja.com / admin123</small>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-crud-produto">
+        <div class="modal-content">
+            <h3 id="modal-prod-title">Cadastrar Produto</h3>
+            <input type="hidden" id="prod-id">
+            <div class="admin-form-grid" style="margin-top:12px;">
+                <div class="admin-form-group"><label>Nome:</label><input type="text" id="prod-nome" class="admin-input" required></div>
+                <div class="admin-form-group"><label>Categoria:</label><select id="prod-cat" class="admin-input"><option>Lanches</option><option>Pizzas</option><option>Bebidas</option><option>Eletrônicos</option></select></div>
+                <div class="admin-form-group"><label>Preço (R$):</label><input type="number" step="0.01" id="prod-preco" class="admin-input" required></div>
+                <div class="admin-form-group"><label>Estoque (un):</label><input type="number" id="prod-est" class="admin-input" required></div>
+                <div class="admin-form-group"><label>Emoji / Ícone:</label><input type="text" id="prod-img" class="admin-input" value="📦"></div>
+            </div>
+            <div class="admin-form-group" style="margin-bottom:12px;"><label>Descrição:</label><textarea id="prod-desc" class="admin-input" style="height:60px;"></textarea></div>
+            <button class="btn-submit" onclick="salvarProdutoCRUD()">Salvar Produto</button>
+            <button class="btn-submit" style="background:#64748b; margin-top:4px;" onclick="fecharModal('modal-crud-produto')">Cancelar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-crud-cliente">
+        <div class="modal-content">
+            <h3 id="modal-cli-title">Cadastrar Novo Cliente</h3>
+            <input type="hidden" id="cli-adm-id">
+            <div class="admin-form-grid" style="margin-top:12px;">
+                <div class="admin-form-group"><label>Nome:</label><input type="text" id="cli-adm-nome" class="admin-input" required></div>
+                <div class="admin-form-group"><label>E-mail:</label><input type="email" id="cli-adm-email" class="admin-input" required></div>
+                <div class="admin-form-group"><label>CPF:</label><input type="text" id="cli-adm-cpf" class="admin-input" required></div>
+                <div class="admin-form-group"><label>Telefone:</label><input type="text" id="cli-adm-tel" class="admin-input" required></div>
+                <div class="admin-form-group"><label>Cidade/UF:</label><input type="text" id="cli-adm-cid" class="admin-input" required value="São Paulo - SP"></div>
+                <div class="admin-form-group"><label>Endereço:</label><input type="text" id="cli-adm-end" class="admin-input" required></div>
+            </div>
+            <button class="btn-submit" onclick="salvarClienteCRUD()">Salvar Cliente</button>
+            <button class="btn-submit" style="background:#64748b; margin-top:4px;" onclick="fecharModal('modal-crud-cliente')">Cancelar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-crud-pedido-manual">
+        <div class="modal-content">
+            <h3>➕ Inserir Pedido Manual (Balcão / Telefone)</h3>
+            <div class="admin-form-grid" style="margin-top:12px;">
+                <div class="admin-form-group"><label>Selecione o Cliente:</label><select id="ped-manual-cli" class="admin-input"></select></div>
+                <div class="admin-form-group"><label>Selecione o Produto:</label><select id="ped-manual-prod" class="admin-input"></select></div>
+                <div class="admin-form-group"><label>Quantidade:</label><input type="number" id="ped-manual-qtd" class="admin-input" value="1" min="1"></div>
+                <div class="admin-form-group"><label>Status Inicial:</label>
+                    <select id="ped-manual-status" class="admin-input">
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Preparo">Em Preparo</option>
+                        <option value="Entregue">Entregue</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn-submit" onclick="salvarPedidoManual()">Lançar Pedido no Sistema</button>
+            <button class="btn-submit" style="background:#64748b; margin-top:4px;" onclick="fecharModal('modal-crud-pedido-manual')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- DRAWER CARRINHO -->
+    <div class="drawer-overlay" id="drawer-carrinho" onclick="fecharCarrinho()">
+        <div class="cart-drawer" onclick="event.stopPropagation()">
+            <div class="drawer-header"><h3>🛒 Carrinho de Compras</h3><button class="btn-close" onclick="fecharCarrinho()">✕</button></div>
+            <div class="drawer-body" id="carrinho-itens-lista"></div>
+            <div style="padding:0 16px;">
+                <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid var(--border); margin:8px 0;">
+                    <label style="font-size:0.75rem; font-weight:700;">🎟️ Cupom:</label>
+                    <div style="display:flex; gap:6px; margin-top:4px;">
+                        <input type="text" id="input-cupom" placeholder="PROMO20" style="flex:1; padding:6px; border:1px solid var(--border); text-transform:uppercase; border-radius:4px;">
+                        <button onclick="aplicarCupomCarrinho()" style="background:var(--text-main); color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">Aplicar</button>
+                    </div>
+                    <small id="cupom-status-msg" style="font-size:0.72rem; display:block; margin-top:4px; font-weight:bold;"></small>
+                </div>
+            </div>
+            <div style="padding:16px; border-top:1px solid var(--border); background:#fafafa;">
+                <div class="summary-row"><span>Subtotal:</span><span id="resumo-subtotal">R$ 0,00</span></div>
+                <div class="summary-row" id="linha-desconto" style="display:none; color:var(--secondary);"><span>Desconto:</span><span id="resumo-desconto">- R$ 0,00</span></div>
+                <div class="summary-row"><span>Frete:</span><span>R$ 10,00</span></div>
+                <div class="summary-row total"><span>Total:</span><span id="resumo-total">R$ 0,00</span></div>
+                <button class="btn-add-cart-large" style="width:100%; margin-top:10px;" onclick="finalizarPedidoCliente()">Finalizar Compra &rarr;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGAÇÃO INFERIOR MOBILE -->
+    <nav class="bottom-nav" id="mobile-nav">
+        <button class="nav-tab active" id="tab-btn-loja" onclick="trocarAba('loja')"><span>🛍️</span> Loja</button>
+        <button class="nav-tab" id="tab-btn-pedidos" onclick="trocarAba('pedidos-cliente')"><span>📦</span> Pedidos</button>
+        <button class="nav-tab" id="tab-btn-perfil" onclick="trocarAba('perfil-cliente')"><span>👤</span> Perfil</button>
+    </nav>
+
+    <!-- ============================================================
+    SCRIPTS DE DADOS E LÓGICA DO APP
+    ============================================================ -->
+    <script>
+        const SEED_PRODUTOS = [
+            { id: 101, nome: "Hambúrguer Gourmet Angus", categoria: "Lanches", preco: 32.00, precoAntigo: 38.00, estoque: 20, img: "🍔", rating: 4.9, totalRatings: 18, descricao: "Pão brioche e 180g de carne angus com queijo cheddar inglês.", avaliacoes: [{ autor: "Mariana R.", rating: 5, texto: "Maravilhoso!", data: "10/09/2026" }] },
+            { id: 102, nome: "Pizza Margherita Especial", categoria: "Pizzas", preco: 58.00, precoAntigo: 68.00, estoque: 15, img: "🍕", rating: 4.8, totalRatings: 34, descricao: "Massa de fermentação natural de 48h com muçarela de búfala.", avaliacoes: [] },
+            { id: 103, nome: "Refrigerante Cola Lata 350ml", categoria: "Bebidas", preco: 6.50, precoAntigo: 8.00, estoque: 50, img: "🥤", rating: 5.0, totalRatings: 42, descricao: "Lata gelada 350ml.", avaliacoes: [] },
+            { id: 104, nome: "Smartphone Galaxy Ultra 5G", categoria: "Eletrônicos", preco: 2299.00, precoAntigo: 2699.00, estoque: 4, img: "📱", rating: 4.7, totalRatings: 12, descricao: "Tela AMOLED 120Hz, 128GB e Câmera 50MP.", avaliacoes: [] }
+        ];
+
+        const SEED_CLIENTES = [
+            { id: 1, nome: "Ana Beatriz Silva", email: "ana@email.com", senha: "123", cpf: "123.456.789-00", telefone: "(11) 98765-4321", endereco: "Rua das Palmeiras, 145", cidade: "São Paulo - SP" },
+            { id: 2, nome: "Carlos Eduardo Souza", email: "carlos@email.com", senha: "123", cpf: "987.654.321-11", telefone: "(21) 97654-3210", endereco: "Av. Atlântica, 1020", cidade: "Rio de Janeiro - RJ" }
+        ];
+
+        const SEED_CUPONS = [
+            { codigo: "PROMO20", tipo: "pct", valor: 20, minPedido: 30, expiraEm: "2026-12-31", ativo: true, desc: "20% OFF acima de R$ 30" },
+            { codigo: "PRIMEIRA10", tipo: "reais", valor: 10, minPedido: 40, expiraEm: "2026-12-31", ativo: true, desc: "R$ 10 OFF acima de R$ 40" }
+        ];
+
+        const SEED_PEDIDOS = [
+            { id: 1001, clienteId: 1, clienteNome: "Ana Beatriz Silva", data: "2026-09-12T10:00:00", status: "Entregue", total: 58.00, itens: [{ produtoId: 102, nome: "Pizza Margherita Especial", qtd: 1, precoUnit: 58.00, subtotalItem: 58.00 }] }
+        ];
+
+        const SEED_CONFIG = { adminEmail: "admin@loja.com", adminSenha: "admin123" };
+
+        function initDatabase() {
+            if (!localStorage.getItem("db_produtos")) localStorage.setItem("db_produtos", JSON.stringify(SEED_PRODUTOS));
+            if (!localStorage.getItem("db_clientes")) localStorage.setItem("db_clientes", JSON.stringify(SEED_CLIENTES));
+            if (!localStorage.getItem("db_cupons")) localStorage.setItem("db_cupons", JSON.stringify(SEED_CUPONS));
+            if (!localStorage.getItem("db_pedidos")) localStorage.setItem("db_pedidos", JSON.stringify(SEED_PEDIDOS));
+            if (!localStorage.getItem("db_config")) localStorage.setItem("db_config", JSON.stringify(SEED_CONFIG));
+        }
+        initDatabase();
+
+        function getProdutos() { return JSON.parse(localStorage.getItem("db_produtos")) || []; }
+        function getClientes() { return JSON.parse(localStorage.getItem("db_clientes")) || []; }
+        function getCupons() { return JSON.parse(localStorage.getItem("db_cupons")) || []; }
+        function getPedidos() { return JSON.parse(localStorage.getItem("db_pedidos")) || []; }
+        function getConfig() { return JSON.parse(localStorage.getItem("db_config")) || SEED_CONFIG; }
+
+        let state = {
+            visao: 'cliente',
+            clienteLogado: JSON.parse(localStorage.getItem("sessao_cliente")) || null,
+            adminLogado: JSON.parse(localStorage.getItem("sessao_admin")) || false,
+            cart: [],
+            cupomAplicado: null,
+            produtoDetalheAtivo: null,
+            qtdDetalhe: 1
+        };
+
+        function renderCatalogo(produtos) {
+            const grid = document.getElementById("grid-produtos");
+            if (!produtos || produtos.length === 0) {
+                grid.innerHTML = "<p style='color:#888; padding:20px; grid-column:1/-1;'>Nenhum produto cadastrado.</p>";
+                return;
+            }
+            grid.innerHTML = produtos.map(p => {
+                const avaliacoesCount = (p.avaliacoes && Array.isArray(p.avaliacoes)) ? p.avaliacoes.length : 0;
+                const rating = (p.rating || 5.0).toFixed(1);
+                return `
+                <div class="product-card">
+                    <div class="product-img" onclick="abrirDetalhe(${p.id})">${p.img || '📦'}</div>
+                    <div class="product-body">
+                        <div class="product-category">${p.categoria || 'Geral'} &bull; Estoque: ${p.estoque || 0} un</div>
+                        <div class="product-title" onclick="abrirDetalhe(${p.id})">${p.nome}</div>
+                        <div class="product-rating" onclick="abrirDetalhe(${p.id})">⭐ ${rating} (${avaliacoesCount} avaliações)</div>
+                        <div class="current-price">R$ ${(p.preco || 0).toFixed(2).replace('.', ',')}</div>
+                        <button class="btn-view-details" onclick="abrirDetalhe(${p.id})">🔍 Ver Detalhes / Comprar</button>
+                    </div>
+                </div>
+            `}).join('');
+
+            const pills = document.getElementById("banner-cupom-pills");
+            pills.innerHTML = getCupons().filter(c => c.ativo).map(c => `
+                <span class="chip" onclick="copiarCupom('${c.codigo}')" style="background:rgba(255,255,255,0.25); color:white; border:1px dashed white;">
+                    🎟️ ${c.codigo} (${c.tipo === 'pct' ? c.valor + '%' : 'R$ ' + c.valor} OFF)
+                </span>
+            `).join('');
+        }
+
+        function abrirDetalhe(id) {
+            const p = getProdutos().find(i => i.id === id);
+            if (!p) { alert("Produto não encontrado!"); return; }
+            if (!p.avaliacoes || !Array.isArray(p.avaliacoes)) p.avaliacoes = [];
+
+            state.produtoDetalheAtivo = p;
+            state.qtdDetalhe = 1;
+
+            document.getElementById("detalhe-img").innerText = p.img || '📦';
+            document.getElementById("detalhe-categoria").innerText = p.categoria || 'Geral';
+            document.getElementById("detalhe-nome").innerText = p.nome;
+            document.getElementById("detalhe-descricao").innerText = p.descricao || 'Sem descrição cadastrada.';
+            document.getElementById("detalhe-estoque-txt").innerText = (p.estoque > 0) ? `✅ Em estoque: ${p.estoque} unidades disponíveis` : `❌ Produto Esgotado`;
+            document.getElementById("detalhe-preco").innerText = `R$ ${(p.preco || 0).toFixed(2).replace('.', ',')}`;
+            document.getElementById("detalhe-rating").innerText = `⭐ ${(p.rating || 5.0).toFixed(1)} (${p.avaliacoes.length} avaliações)`;
+
+            atualizarSubtotalDetalhe();
+            renderAvaliacoesDetalhe(p);
+            checarGatilhoAvaliacao(p.id);
+            trocarAba('produto-detalhe');
+        }
+
+        function ajustarQtdDetalhe(delta) {
+            if (!state.produtoDetalheAtivo) return;
+            state.qtdDetalhe += delta;
+            if (state.qtdDetalhe < 1) state.qtdDetalhe = 1;
+            if (state.qtdDetalhe > (state.produtoDetalheAtivo.estoque || 1)) {
+                state.qtdDetalhe = state.produtoDetalheAtivo.estoque;
+                mostrarToast("Limite de estoque atingido!");
+            }
+            atualizarSubtotalDetalhe();
+        }
+
+        function atualizarSubtotalDetalhe() {
+            if (!state.produtoDetalheAtivo) return;
+            document.getElementById("detalhe-qtd-valor").innerText = state.qtdDetalhe;
+            const sub = (state.produtoDetalheAtivo.preco || 0) * state.qtdDetalhe;
+            document.getElementById("detalhe-btn-subtotal").innerText = `R$ ${sub.toFixed(2).replace('.', ',')}`;
+        }
+
+        function adicionarDetalheAoCarrinho() {
+            if (!state.produtoDetalheAtivo || state.produtoDetalheAtivo.estoque <= 0) {
+                alert("Produto esgotado!"); return;
+            }
+            const p = state.produtoDetalheAtivo;
+            const item = state.cart.find(i => i.id === p.id);
+            if (item) item.qtd += state.qtdDetalhe;
+            else state.cart.push({ id: p.id, nome: p.nome, preco: p.preco, img: p.img, qtd: state.qtdDetalhe });
+            atualizarBadgeCarrinho();
+            mostrarToast(`🍔 ${state.qtdDetalhe}x "${p.nome}" adicionado!`);
+            abrirCarrinho();
+        }
+
+        function checarGatilhoAvaliacao(prodId) {
+            const box = document.getElementById("box-formulario-avaliacao");
+            if (!state.clienteLogado) {
+                box.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted);">🔒 Faça login para avaliar produtos.</p>`;
+                return;
+            }
+            const pedidos = getPedidos();
+            const comprouEEntregue = pedidos.some(p => p.clienteId === state.clienteLogado.id && p.status === 'Entregue' && p.itens && p.itens.some(it => it.produtoId === prodId));
+
+            if (comprouEEntregue) {
+                box.innerHTML = `
+                    <div style="color:var(--accent); font-weight:bold; font-size:0.85rem;">✅ Compra Entregue Confirmada! Avalie o produto:</div>
+                    <select id="novo-rating" style="padding:6px; border-radius:6px; margin:6px 0;">
+                        <option value="5">⭐⭐⭐⭐⭐ (5/5 Excelente)</option>
+                        <option value="4">⭐⭐⭐⭐ (4/5 Muito Bom)</option>
+                        <option value="3">⭐⭐⭐ (3/5 Regular)</option>
+                    </select>
+                    <textarea id="novo-comentario" placeholder="Deixe sua opinião..." style="width:100%; height:50px; padding:6px; border-radius:6px; border:1px solid var(--border); font-size:0.82rem;"></textarea>
+                    <button class="btn-crud" style="margin-top:6px;" onclick="publicarAvaliacao(${prodId})">Publicar Avaliação</button>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div style="color:var(--warning); font-weight:bold; font-size:0.85rem;">🔒 Avaliação Bloqueada:</div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Apenas clientes com pedidos <strong>Entregues pelo Administrador</strong> podem avaliar.</p>
+                `;
+            }
+        }
+
+        function publicarAvaliacao(prodId) {
+            const texto = document.getElementById("novo-comentario").value.trim();
+            const rating = parseInt(document.getElementById("novo-rating").value);
+            if (!texto) return;
+
+            const prods = getProdutos();
+            const p = prods.find(i => i.id === prodId);
+            if (!p.avaliacoes) p.avaliacoes = [];
+            p.avaliacoes.unshift({ autor: state.clienteLogado.nome, rating: rating, texto: texto, data: new Date().toLocaleDateString('pt-BR') });
+            p.totalRatings = (p.totalRatings || 0) + 1;
+            localStorage.setItem("db_produtos", JSON.stringify(prods));
+            mostrarToast("⭐ Avaliação enviada com sucesso!");
+            abrirDetalhe(prodId);
+        }
+
+        function renderAvaliacoesDetalhe(p) {
+            const box = document.getElementById("detalhe-lista-avaliacoes");
+            const avs = p.avaliacoes || [];
+            if (avs.length === 0) { box.innerHTML = "<p style='color:#888; font-size:0.82rem;'>Ainda não há avaliações.</p>"; return; }
+            box.innerHTML = avs.map(a => `
+                <div style="background:#f8fafc; padding:8px 12px; border-radius:6px; border-left:3px solid var(--warning);">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.82rem;"><span>${a.autor}</span><span style="color:var(--warning);">${"⭐".repeat(a.rating)}</span></div>
+                    <p style="font-size:0.8rem; color:#334155; margin-top:2px;">${a.texto}</p>
+                    <small style="color:#888; font-size:0.7rem;">${a.data}</small>
+                </div>
+            `).join('');
+        }
+
+        function abrirCarrinho() {
+            const box = document.getElementById("carrinho-itens-lista");
+            if (state.cart.length === 0) {
+                box.innerHTML = "<p style='text-align:center; padding:40px; color:#888;'>Carrinho vazio.</p>";
+            } else {
+                box.innerHTML = state.cart.map(i => `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border);">
+                        <div><strong>${i.img || '📦'} ${i.nome}</strong><br><small>${i.qtd}x R$ ${(i.preco || 0).toFixed(2).replace('.', ',')}</small></div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button onclick="alterarQtdCart(${i.id}, -1)" style="width:24px; height:24px; cursor:pointer;">-</button>
+                            <span>${i.qtd}</span>
+                            <button onclick="alterarQtdCart(${i.id}, 1)" style="width:24px; height:24px; cursor:pointer;">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            calcularTotaisCarrinho();
+            document.getElementById("drawer-carrinho").classList.add("active");
+        }
+
+        function fecharCarrinho() { document.getElementById("drawer-carrinho").classList.remove("active"); }
+
+        function alterarQtdCart(id, delta) {
+            const item = state.cart.find(i => i.id === id);
+            if (!item) return;
+            item.qtd += delta;
+            if (item.qtd <= 0) state.cart = state.cart.filter(i => i.id !== id);
+            abrirCarrinho();
+            atualizarBadgeCarrinho();
+        }
+
+        function atualizarBadgeCarrinho() {
+            document.getElementById("badge-cart-count").innerText = state.cart.reduce((a, b) => a + b.qtd, 0);
+        }
+
+        function calcularTotaisCarrinho() {
+            const sub = state.cart.reduce((a, b) => a + (b.preco * b.qtd), 0);
+            let desc = 0;
+            if (state.cupomAplicado) {
+                if (state.cupomAplicado.tipo === 'pct') desc = sub * (state.cupomAplicado.valor / 100);
+                if (state.cupomAplicado.tipo === 'reais') desc = state.cupomAplicado.valor;
+            }
+            const total = Math.max(0, sub - desc + (state.cart.length > 0 ? 10 : 0));
+            document.getElementById("resumo-subtotal").innerText = "R$ " + sub.toFixed(2).replace('.', ',');
+            document.getElementById("resumo-total").innerText = "R$ " + total.toFixed(2).replace('.', ',');
+
+            const lDesc = document.getElementById("linha-desconto");
+            if (desc > 0) { lDesc.style.display = "flex"; document.getElementById("resumo-desconto").innerText = "- R$ " + desc.toFixed(2).replace('.', ','); }
+            else { lDesc.style.display = "none"; }
+            return { sub, desc, total };
+        }
+
+        function aplicarCupomCarrinho() {
+            const cod = document.getElementById("input-cupom").value.trim().toUpperCase();
+            const cupom = getCupons().find(c => c.codigo === cod);
+            const msg = document.getElementById("cupom-status-msg");
+            const sub = state.cart.reduce((a, b) => a + (b.preco * b.qtd), 0);
+
+            if (!cupom || !cupom.ativo || new Date(cupom.expiraEm) < new Date() || sub < cupom.minPedido) {
+                msg.innerText = "❌ Cupom inválido, expirado ou mínimo não atingido.";
+                msg.style.color = "var(--danger)";
+                state.cupomAplicado = null;
+            } else {
+                state.cupomAplicado = cupom;
+                msg.innerText = `✅ Cupom ${cod} Ativado!`;
+                msg.style.color = "var(--accent)";
+                mostrarToast("Cupom aplicado!");
+            }
+            calcularTotaisCarrinho();
+        }
+
+        function copiarCupom(cod) {
+            document.getElementById("input-cupom").value = cod;
+            abrirCarrinho();
+            aplicarCupomCarrinho();
+        }
+
+        function finalizarPedidoCliente() {
+            if (state.cart.length === 0) return;
+            if (!state.clienteLogado) { fecharCarrinho(); abrirModalAuthCliente(); alert("Identifique-se para fechar o pedido!"); return; }
+
+            const totais = calcularTotaisCarrinho();
+            const pedidos = getPedidos();
+            const prods = getProdutos();
+
+            state.cart.forEach(item => {
+                const p = prods.find(x => x.id === item.id);
+                if (p) p.estoque = Math.max(0, (p.estoque || 0) - item.qtd);
+            });
+            localStorage.setItem("db_produtos", JSON.stringify(prods));
+
+            const novoPed = {
+                id: 1000 + pedidos.length + 1,
+                clienteId: state.clienteLogado.id,
+                clienteNome: state.clienteLogado.nome,
+                data: new Date().toISOString(),
+                status: "Pendente",
+                total: totais.total,
+                itens: state.cart.map(i => ({ produtoId: i.id, nome: i.nome, qtd: i.qtd, precoUnit: i.preco, subtotalItem: i.preco * i.qtd }))
+            };
+
+            pedidos.unshift(novoPed);
+            localStorage.setItem("db_pedidos", JSON.stringify(pedidos));
+
+            state.cart = [];
+            state.cupomAplicado = null;
+            atualizarBadgeCarrinho();
+            fecharCarrinho();
+            mostrarToast("🎉 Pedido Confirmado! O Admin dará baixa.");
+            trocarAba('pedidos-cliente');
+        }
+
+        function renderAdminDashboard() {
+            const pedidos = getPedidos();
+            const clientes = getClientes();
+            const faturamento = pedidos.reduce((acc, p) => p.status !== 'Cancelado' ? acc + (p.total || 0) : acc, 0);
+            const ticket = pedidos.length > 0 ? faturamento / pedidos.length : 0;
+
+            document.getElementById("kpi-faturamento").innerText = `R$ ${faturamento.toFixed(2).replace('.', ',')}`;
+            document.getElementById("kpi-total-pedidos").innerText = pedidos.length;
+            document.getElementById("kpi-ticket-medio").innerText = `R$ ${ticket.toFixed(2).replace('.', ',')}`;
+            document.getElementById("kpi-total-clientes").innerText = clientes.length;
+
+            const counts = { Pendente: 0, "Em Preparo": 0, "Em Transporte": 0, Entregue: 0, Cancelado: 0 };
+            pedidos.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
+
+            document.getElementById("kpi-status-chips").innerHTML = Object.entries(counts).map(([st, qtd]) => `
+                <span class="chip" style="background:#f1f5f9; color:#334155;"><strong>${st}:</strong> ${qtd}</span>
+            `).join('');
+        }
+
+        function renderAdminPedidosTable() {
+            const peds = getPedidos();
+            document.getElementById("tbody-adm-pedidos").innerHTML = peds.map(p => `
+                <tr>
+                    <td><strong>#${p.id}</strong></td>
+                    <td>${p.clienteNome}</td>
+                    <td>${new Date(p.data).toLocaleDateString('pt-BR')}</td>
+                    <td><strong>R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</strong></td>
+                    <td><span class="chip" style="background:#e0f2fe; color:#0369a1; font-weight:bold;">${p.status}</span></td>
+                    <td>
+                        <select class="select-status" onchange="alterarStatusPedidoAdmin(${p.id}, this.value)">
+                            <option value="Pendente" ${p.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
+                            <option value="Em Preparo" ${p.status === 'Em Preparo' ? 'selected' : ''}>Em Preparo</option>
+                            <option value="Em Transporte" ${p.status === 'Em Transporte' ? 'selected' : ''}>Em Transporte</option>
+                            <option value="Entregue" ${p.status === 'Entregue' ? 'selected' : ''}>✅ Entregue (Permite Avaliação)</option>
+                            <option value="Cancelado" ${p.status === 'Cancelado' ? 'selected' : ''}>❌ Cancelado</option>
+                        </select>
+                    </td>
+                    <td><button class="btn-crud delete" onclick="excluirPedidoAdmin(${p.id})">Excluir</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function alterarStatusPedidoAdmin(id, st) {
+            const peds = getPedidos();
+            const p = peds.find(x => x.id === id);
+            if (p) {
+                p.status = st;
+                localStorage.setItem("db_pedidos", JSON.stringify(peds));
+                mostrarToast(`Status do Pedido #${id} atualizado para ${st}`);
+                renderAdminDashboard();
+                renderAdminPedidosTable();
+            }
+        }
+
+        function excluirPedidoAdmin(id) {
+            if (!confirm(`Excluir permanentemente o pedido #${id}?`)) return;
+            const peds = getPedidos().filter(x => x.id !== id);
+            localStorage.setItem("db_pedidos", JSON.stringify(peds));
+            renderAdminPedidosTable();
+            renderAdminDashboard();
+        }
+
+        function abrirModalPedidoManual() {
+            const cliSelect = document.getElementById("ped-manual-cli");
+            const prodSelect = document.getElementById("ped-manual-prod");
+            cliSelect.innerHTML = getClientes().map(c => `<option value="${c.id}">${c.nome} (${c.email})</option>`).join('');
+            prodSelect.innerHTML = getProdutos().map(p => `<option value="${p.id}">${p.nome} - R$ ${p.preco.toFixed(2)} (Estq: ${p.estoque})</option>`).join('');
+            document.getElementById("modal-crud-pedido-manual").classList.add("active");
+        }
+
+        function salvarPedidoManual() {
+            const cliId = parseInt(document.getElementById("ped-manual-cli").value);
+            const prodId = parseInt(document.getElementById("ped-manual-prod").value);
+            const qtd = parseInt(document.getElementById("ped-manual-qtd").value) || 1;
+            const status = document.getElementById("ped-manual-status").value;
+
+            const cliente = getClientes().find(c => c.id === cliId);
+            const prods = getProdutos();
+            const prod = prods.find(p => p.id === prodId);
+
+            if (!cliente || !prod) { alert("Selecione cliente e produto!"); return; }
+
+            prod.estoque = Math.max(0, (prod.estoque || 0) - qtd);
+            localStorage.setItem("db_produtos", JSON.stringify(prods));
+
+            const total = prod.preco * qtd;
+            const pedidos = getPedidos();
+            const novoPed = {
+                id: 1000 + pedidos.length + 1,
+                clienteId: cliente.id,
+                clienteNome: cliente.nome,
+                data: new Date().toISOString(),
+                status: status,
+                total: total,
+                itens: [{ produtoId: prod.id, nome: prod.nome, qtd: qtd, precoUnit: prod.preco, subtotalItem: total }]
+            };
+
+            pedidos.unshift(novoPed);
+            localStorage.setItem("db_pedidos", JSON.stringify(pedidos));
+            fecharModal("modal-crud-pedido-manual");
+            mostrarToast("✅ Pedido manual inserido com sucesso!");
+            renderAdminPedidosTable();
+            renderAdminDashboard();
+            renderCatalogo(getProdutos());
+        }
+
+        function renderAdminProdutosTable() {
+            document.getElementById("tbody-adm-produtos").innerHTML = getProdutos().map(p => `
+                <tr>
+                    <td>#${p.id}</td>
+                    <td style="font-size:1.5rem;">${p.img || '📦'}</td>
+                    <td><strong>${p.nome}</strong></td>
+                    <td>${p.categoria}</td>
+                    <td>R$ ${(p.preco || 0).toFixed(2).replace('.', ',')}</td>
+                    <td><strong style="color:${(p.estoque < 5) ? 'red' : 'green'};">${p.estoque || 0} un</strong></td>
+                    <td>
+                        <button class="btn-crud edit" onclick="editarProdutoModal(${p.id})">Editar</button>
+                        <button class="btn-crud delete" onclick="excluirProdutoAdmin(${p.id})">Excluir</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModalProduto() {
+            document.getElementById("prod-id").value = "";
+            document.getElementById("modal-prod-title").innerText = "Cadastrar Produto";
+            document.getElementById("prod-nome").value = "";
+            document.getElementById("prod-preco").value = "";
+            document.getElementById("prod-est").value = "10";
+            document.getElementById("prod-img").value = "📦";
+            document.getElementById("prod-desc").value = "";
+            document.getElementById("modal-crud-produto").classList.add("active");
+        }
+
+        function editarProdutoModal(id) {
+            const p = getProdutos().find(x => x.id === id);
+            document.getElementById("prod-id").value = p.id;
+            document.getElementById("modal-prod-title").innerText = "Editar Produto #" + p.id;
+            document.getElementById("prod-nome").value = p.nome;
+            document.getElementById("prod-cat").value = p.categoria;
+            document.getElementById("prod-preco").value = p.preco;
+            document.getElementById("prod-est").value = p.estoque;
+            document.getElementById("prod-img").value = p.img || "📦";
+            document.getElementById("prod-desc").value = p.descricao || "";
+            document.getElementById("modal-crud-produto").classList.add("active");
+        }
+
+        function salvarProdutoCRUD() {
+            const id = document.getElementById("prod-id").value;
+            const prods = getProdutos();
+            const nome = document.getElementById("prod-nome").value.trim();
+            const preco = parseFloat(document.getElementById("prod-preco").value) || 0;
+            const est = parseInt(document.getElementById("prod-est").value) || 0;
+
+            if (!nome || preco <= 0) { alert("Preencha nome e preço!"); return; }
+
+            if (id) {
+                const p = prods.find(x => x.id == id);
+                p.nome = nome; p.categoria = document.getElementById("prod-cat").value; p.preco = preco; p.estoque = est; p.img = document.getElementById("prod-img").value || "📦"; p.descricao = document.getElementById("prod-desc").value;
+                if (!p.avaliacoes) p.avaliacoes = [];
+            } else {
+                prods.push({
+                    id: 100 + prods.length + 1,
+                    nome: nome, categoria: document.getElementById("prod-cat").value, preco: preco, precoAntigo: preco * 1.2, estoque: est, img: document.getElementById("prod-img").value || "📦", rating: 5.0, totalRatings: 0, descricao: document.getElementById("prod-desc").value, avaliacoes: []
+                });
+            }
+            localStorage.setItem("db_produtos", JSON.stringify(prods));
+            fecharModal('modal-crud-produto');
+            mostrarToast("Produto salvo com sucesso!");
+            renderAdminProdutosTable();
+            renderCatalogo(getProdutos());
+        }
+
+        function excluirProdutoAdmin(id) {
+            if (!confirm("Excluir este produto?")) return;
+            localStorage.setItem("db_produtos", JSON.stringify(getProdutos().filter(x => x.id !== id)));
+            renderAdminProdutosTable();
+            renderCatalogo(getProdutos());
+        }
+
+        function renderAdminClientesTable() {
+            document.getElementById("tbody-adm-clientes").innerHTML = getClientes().map(c => `
+                <tr>
+                    <td>#${c.id}</td>
+                    <td><strong>${c.nome}</strong></td>
+                    <td>${c.email}</td>
+                    <td>${c.cpf}</td>
+                    <td>${c.cidade}</td>
+                    <td>
+                        <button class="btn-crud edit" onclick="editarClienteModal(${c.id})">Editar</button>
+                        <button class="btn-crud delete" onclick="excluirClienteAdmin(${c.id})">Excluir</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModalClienteManual() {
+            document.getElementById("cli-adm-id").value = "";
+            document.getElementById("modal-cli-title").innerText = "Cadastrar Novo Cliente";
+            document.getElementById("cli-adm-nome").value = "";
+            document.getElementById("cli-adm-email").value = "";
+            document.getElementById("cli-adm-cpf").value = "";
+            document.getElementById("cli-adm-tel").value = "";
+            document.getElementById("cli-adm-end").value = "";
+            document.getElementById("cli-adm-cid").value = "São Paulo - SP";
+            document.getElementById("modal-crud-cliente").classList.add("active");
+        }
+
+        function editarClienteModal(id) {
+            const c = getClientes().find(x => x.id === id);
+            document.getElementById("cli-adm-id").value = c.id;
+            document.getElementById("modal-cli-title").innerText = "Editar Cliente #" + c.id;
+            document.getElementById("cli-adm-nome").value = c.nome;
+            document.getElementById("cli-adm-email").value = c.email;
+            document.getElementById("cli-adm-cpf").value = c.cpf;
+            document.getElementById("cli-adm-tel").value = c.telefone;
+            document.getElementById("cli-adm-end").value = c.endereco;
+            document.getElementById("cli-adm-cid").value = c.cidade;
+            document.getElementById("modal-crud-cliente").classList.add("active");
+        }
+
+        function salvarClienteCRUD() {
+            const id = document.getElementById("cli-adm-id").value;
+            const clis = getClientes();
+            const nome = document.getElementById("cli-adm-nome").value.trim();
+            const email = document.getElementById("cli-adm-email").value.trim();
+
+            if (!nome || !email) { alert("Preencha nome e e-mail!"); return; }
+
+            if (id) {
+                const c = clis.find(x => x.id == id);
+                c.nome = nome; c.email = email; c.cpf = document.getElementById("cli-adm-cpf").value; c.telefone = document.getElementById("cli-adm-tel").value; c.endereco = document.getElementById("cli-adm-end").value; c.cidade = document.getElementById("cli-adm-cid").value;
+            } else {
+                clis.push({
+                    id: clis.length + 1,
+                    nome: nome, email: email, senha: "123", cpf: document.getElementById("cli-adm-cpf").value, telefone: document.getElementById("cli-adm-tel").value, endereco: document.getElementById("cli-adm-end").value, cidade: document.getElementById("cli-adm-cid").value
+                });
+            }
+            localStorage.setItem("db_clientes", JSON.stringify(clis));
+            fecharModal('modal-crud-cliente');
+            mostrarToast("Cliente salvo com sucesso!");
+            renderAdminClientesTable();
+            renderAdminDashboard();
+        }
+
+        function excluirClienteAdmin(id) {
+            if (!confirm("Excluir este cliente?")) return;
+            localStorage.setItem("db_clientes", JSON.stringify(getClientes().filter(x => x.id !== id)));
+            renderAdminClientesTable();
+            renderAdminDashboard();
+        }
+
+        function renderAdminCuponsTable() {
+            document.getElementById("tbody-adm-cupons").innerHTML = getCupons().map((c, idx) => `
+                <tr>
+                    <td><strong>${c.codigo}</strong></td>
+                    <td>${c.tipo === 'pct' ? c.valor + '%' : 'R$ ' + c.valor} OFF</td>
+                    <td>R$ ${c.minPedido},00</td>
+                    <td>${c.expiraEm}</td>
+                    <td><span style="color:${c.ativo ? 'green' : 'red'}; font-weight:bold;">${c.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                    <td>
+                        <button class="btn-crud edit" onclick="alternarCupom(${idx})">${c.ativo ? 'Pausar' : 'Ativar'}</button>
+                        <button class="btn-crud delete" onclick="excluirCupom(${idx})">Excluir</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function salvarNovoCupomAdmin() {
+            const cod = document.getElementById("cupom-cod").value.trim().toUpperCase();
+            const val = parseFloat(document.getElementById("cupom-val").value) || 0;
+            const min = parseFloat(document.getElementById("cupom-min").value) || 0;
+            const exp = document.getElementById("cupom-exp").value;
+            const tipo = document.getElementById("cupom-tipo").value;
+
+            if (!cod || val <= 0) return;
+            const cups = getCupons();
+            cups.push({ codigo: cod, tipo: tipo, valor: val, minPedido: min, expiraEm: exp, ativo: true, desc: `${val}${tipo === 'pct' ? '%' : 'R$'} OFF` });
+            localStorage.setItem("db_cupons", JSON.stringify(cups));
+            document.getElementById("cupom-cod").value = "";
+            renderAdminCuponsTable();
+            renderCatalogo(getProdutos());
+            mostrarToast("Cupom cadastrado!");
+        }
+
+        function alternarCupom(idx) {
+            const c = getCupons(); c[idx].ativo = !c[idx].ativo; localStorage.setItem("db_cupons", JSON.stringify(c)); renderAdminCuponsTable(); renderCatalogo(getProdutos());
+        }
+        function excluirCupom(idx) {
+            const c = getCupons(); c.splice(idx, 1); localStorage.setItem("db_cupons", JSON.stringify(c)); renderAdminCuponsTable(); renderCatalogo(getProdutos());
+        }
+
+        function exportarBackupJSON() {
+            const bkp = { produtos: getProdutos(), clientes: getClientes(), pedidos: getPedidos(), cupons: getCupons(), config: getConfig() };
+            const str = JSON.stringify(bkp, null, 2);
+            document.getElementById("json-viewer").innerText = str;
+
+            const blob = new Blob([str], { type: "application/json" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `backup-loja-express-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            mostrarToast("Backup exportado!");
+        }
+
+        function importarBackupJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const r = new FileReader();
+            r.onload = (ev) => {
+                try {
+                    const d = JSON.parse(ev.target.result);
+                    if (d.produtos) localStorage.setItem("db_produtos", JSON.stringify(d.produtos));
+                    if (d.clientes) localStorage.setItem("db_clientes", JSON.stringify(d.clientes));
+                    if (d.pedidos) localStorage.setItem("db_pedidos", JSON.stringify(d.pedidos));
+                    if (d.cupons) localStorage.setItem("db_cupons", JSON.stringify(d.cupons));
+                    mostrarToast("Banco restaurado com sucesso!");
+                    renderCatalogo(getProdutos());
+                    renderAdminDashboard();
+                    renderAdminPedidosTable();
+                    renderAdminProdutosTable();
+                    renderAdminClientesTable();
+                    renderAdminCuponsTable();
+                } catch (err) { alert("JSON inválido!"); }
+            };
+            r.readAsText(file);
+        }
+
+        function salvarCredenciaisAdmin() {
+            const email = document.getElementById("adm-cfg-email").value.trim();
+            const senha = document.getElementById("adm-cfg-senha").value.trim();
+            if (!email || !senha) { alert("Preencha e-mail e nova senha!"); return; }
+            localStorage.setItem("db_config", JSON.stringify({ adminEmail: email, adminSenha: senha }));
+            mostrarToast("Senha do Administrador atualizada com sucesso!");
+        }
+
+        function resetarBancoFabrica() {
+            if (!confirm("Restaurar dados iniciais de fábrica?")) return;
+            localStorage.clear();
+            initDatabase();
+            mostrarToast("Dados de fábrica restaurados!");
+            renderCatalogo(getProdutos());
+            renderAdminDashboard();
+            renderAdminPedidosTable();
+            renderAdminProdutosTable();
+            renderAdminClientesTable();
+            renderAdminCuponsTable();
+        }
+
+        function alternarVisao(v) {
+            if (v === 'admin' && !state.adminLogado) {
+                document.getElementById("modal-login-admin").classList.add("active");
+                return;
+            }
+            state.visao = v;
+            document.getElementById("btn-role-cliente").className = "role-btn " + (v === 'cliente' ? 'active' : '');
+            document.getElementById("btn-role-admin").className = "role-btn " + (v === 'admin' ? 'active admin' : '');
+            document.getElementById("mobile-nav").style.display = v === 'cliente' ? 'flex' : 'none';
+            document.getElementById("btn-carrinho-header").style.display = v === 'cliente' ? 'flex' : 'none';
+            document.getElementById("btn-header-auth").style.display = v === 'cliente' ? 'flex' : 'none';
+
+            if (v === 'admin') {
+                trocarAba('admin');
+                renderAdminDashboard();
+                renderAdminPedidosTable();
+                renderAdminProdutosTable();
+                renderAdminClientesTable();
+                renderAdminCuponsTable();
+            } else {
+                trocarAba('loja');
+                renderCatalogo(getProdutos());
+            }
+        }
+
+        function autenticarAdmin(e) {
+            e.preventDefault();
+            const em = document.getElementById("adm-login-email").value.trim();
+            const ps = document.getElementById("adm-login-senha").value.trim();
+            const cfg = getConfig();
+
+            if (em === cfg.adminEmail && ps === cfg.adminSenha) {
+                state.adminLogado = true;
+                localStorage.setItem("sessao_admin", "true");
+                fecharModal('modal-login-admin');
+                alternarVisao('admin');
+                mostrarToast("Acesso administrativo concedido!");
+            } else {
+                alert("Credenciais administrativas incorretas!");
+            }
+        }
+
+        function logoutAdmin() {
+            state.adminLogado = false;
+            localStorage.removeItem("sessao_admin");
+            alternarVisao('cliente');
+            mostrarToast("Sessão administrativa encerrada.");
+        }
+
+        function abrirModalAuthCliente() { document.getElementById("modal-auth-cliente").classList.add("active"); }
+        function fecharModal(id) { document.getElementById(id).classList.remove("active"); }
+
+        function alternarAbaCliente(a) {
+            document.querySelectorAll(".auth-tab-btn").forEach(b => b.classList.remove("active"));
+            if (a === 'login') {
+                document.getElementById("tab-cli-login").classList.add("active");
+                document.getElementById("form-cli-login").style.display = "block";
+                document.getElementById("form-cli-cad").style.display = "none";
+            } else {
+                document.getElementById("tab-cli-cad").classList.add("active");
+                document.getElementById("form-cli-login").style.display = "none";
+                document.getElementById("form-cli-cad").style.display = "block";
+            }
+        }
+
+        function loginCliente(e) {
+            e.preventDefault();
+            const em = document.getElementById("cli-log-email").value.trim();
+            const ps = document.getElementById("cli-log-senha").value.trim();
+            const cli = getClientes().find(c => c.email === em && c.senha === ps);
+            if (cli) {
+                state.clienteLogado = cli;
+                localStorage.setItem("sessao_cliente", JSON.stringify(cli));
+                atualizarHeaderAuth();
+                fecharModal('modal-auth-cliente');
+                mostrarToast(`Bem-vindo(a), ${cli.nome.split(' ')[0]}!`);
+            } else { alert("E-mail ou senha incorretos."); }
+        }
+
+        function cadastroCliente(e) {
+            e.preventDefault();
+            const clis = getClientes();
+            const em = document.getElementById("cad-email").value.trim();
+            if (clis.some(c => c.email === em)) { alert("E-mail já cadastrado!"); return; }
+
+            const novo = {
+                id: clis.length + 1,
+                nome: document.getElementById("cad-nome").value.trim(),
+                email: em,
+                senha: document.getElementById("cad-senha").value.trim(),
+                cpf: document.getElementById("cad-cpf").value.trim(),
+                telefone: document.getElementById("cad-tel").value.trim(),
+                endereco: document.getElementById("cad-end").value.trim(),
+                cidade: document.getElementById("cad-cid").value.trim()
+            };
+            clis.push(novo);
+            localStorage.setItem("db_clientes", JSON.stringify(clis));
+            state.clienteLogado = novo;
+            localStorage.setItem("sessao_cliente", JSON.stringify(novo));
+            atualizarHeaderAuth();
+            fecharModal('modal-auth-cliente');
+            mostrarToast("Conta criada com sucesso!");
+        }
+
+        function logoutCliente() {
+            state.clienteLogado = null;
+            localStorage.removeItem("sessao_cliente");
+            atualizarHeaderAuth();
+            trocarAba('loja');
+            mostrarToast("Você saiu da conta.");
+        }
+
+        function atualizarHeaderAuth() {
+            document.getElementById("lbl-cliente-logado").innerText = state.clienteLogado ? state.clienteLogado.nome.split(' ')[0] : "Entrar";
+        }
+
+        function trocarAba(a) {
+            document.querySelectorAll(".view-section").forEach(v => v.classList.remove("active"));
+            document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+
+            const target = document.getElementById("view-" + a);
+            if (target) target.classList.add("active");
+
+            const tabBtn = document.getElementById("tab-btn-" + a.replace('-cliente', ''));
+            if (tabBtn) tabBtn.classList.add("active");
+
+            if (a === 'pedidos-cliente') renderPedidosCliente();
+            if (a === 'perfil-cliente') renderPerfilCliente();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function trocarSubAbaAdmin(sub, btn) {
+            document.querySelectorAll(".admin-subview").forEach(s => s.classList.remove("active"));
+            document.querySelectorAll(".admin-tab-btn").forEach(b => b.classList.remove("active"));
+            document.getElementById(sub).classList.add("active");
+            btn.classList.add("active");
+        }
+
+        function renderPedidosCliente() {
+            const box = document.getElementById("lista-pedidos-cliente");
+            if (!state.clienteLogado) { box.innerHTML = "<p style='text-align:center; padding:40px; color:#888;'>Faça login para ver seus pedidos.</p>"; return; }
+            const peds = getPedidos().filter(p => p.clienteId === state.clienteLogado.id);
+            if (peds.length === 0) { box.innerHTML = "<p style='text-align:center; padding:40px; color:#888;'>Nenhum pedido realizado.</p>"; return; }
+
+            box.innerHTML = peds.map(p => `
+                <div style="background:white; padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between;"><strong>Pedido #${p.id}</strong><span class="chip" style="background:#e0f2fe; color:#0369a1; font-weight:bold;">${p.status}</span></div>
+                    <small style="color:#888;">${new Date(p.data).toLocaleDateString('pt-BR')}</small>
+                    <div style="margin:8px 0; font-size:0.85rem;">${p.itens ? p.itens.map(i => `${i.qtd}x ${i.nome}`).join(', ') : ''}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:var(--primary);">Total: R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</strong>
+                        ${p.status === 'Entregue' && p.itens && p.itens.length > 0 ? `<button class="btn-crud" onclick="abrirDetalhe(${p.itens[0].produtoId})">⭐ Avaliar</button>` : `<small style="color:#888;">Aguardando entrega do Admin</small>`}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPerfilCliente() {
+            const c = state.clienteLogado;
+            const box = document.getElementById("dados-cliente-perfil");
+            if (!c) { box.innerHTML = "<p>Nenhum cliente conectado.</p>"; return; }
+            box.innerHTML = `<p><strong>Nome:</strong> ${c.nome}</p><p><strong>E-mail:</strong> ${c.email}</p><p><strong>CPF:</strong> ${c.cpf}</p><p><strong>Telefone:</strong> ${c.telefone}</p><p><strong>Endereço:</strong> ${c.endereco} - ${c.cidade}</p>`;
+        }
+
+        function filtrarProdutos() {
+            const t = document.getElementById("input-busca").value.toLowerCase();
+            renderCatalogo(getProdutos().filter(p => p.nome.toLowerCase().includes(t)));
+        }
+
+        function filtrarCategoria(c, btn) {
+            document.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+            btn.classList.add("active");
+            renderCatalogo(c === 'todos' ? getProdutos() : getProdutos().filter(p => p.categoria === c));
+        }
+
+        function mostrarToast(m) {
+            const t = document.getElementById("app-toast"); t.innerText = m; t.style.display = "block";
+            setTimeout(() => t.style.display = "none", 2500);
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            renderCatalogo(getProdutos());
+            atualizarHeaderAuth();
+            atualizarBadgeCarrinho();
+        });
+    </script>
+
+    <!-- ============================================================
+    REGISTRO OFICIAL DO SERVICE WORKER (PWA)
+    ============================================================ -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('✅ [PWA] Service Worker registrado com sucesso! Escopo:', reg.scope))
+                    .catch(err => console.error('❌ [PWA] Falha ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
