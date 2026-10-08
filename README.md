@@ -1,4 +1,3 @@
-```
 # 🛍️ LojaExpress Pro Delivery — PWA & ERP Comercial
 
 > **Aplicação Web Progressiva (PWA)** completa com arquitetura *Single-Page Application* (SPA), integrando **Loja Virtual (Visão do Cliente)** e **Back-Office ERP (Visão do Administrador)** sobre um banco relacional simulado em `localStorage`.
